@@ -3,7 +3,7 @@ defmodule GraffitiRemovalRequestFetcher.MixProject do
 
   def project do
     [
-      app: :graffiti_removal_request_fetcher,
+      app: :grr,
       version: "0.1.0",
       elixir: "~> 1.8",
       escript: escript_config(),
@@ -35,6 +35,6 @@ defmodule GraffitiRemovalRequestFetcher.MixProject do
   end
 
   defp escript_config do
-    [main_module: Fetch]
+    [main_module: UIClient]
   end
 end

@@ -17,7 +17,7 @@ defmodule GraffitiRemovalRequestFetcher do
     4. Recusion, matching (guards for multi-head fns)
     5. Structs, @specs, exceptions, behaviors
     6. Tests
-    7. benchmark
+    7. Benchmark
 
     B app: GenServer with Supervisor link to store past data
 
