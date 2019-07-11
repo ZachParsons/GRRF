@@ -30,7 +30,8 @@ defmodule GraffitiRemovalRequestFetcher.MixProject do
       {:dialyxir, "~> 0.5.0", only: [:dev], runtime: false},
       {:httpoison, "~> 1.4"},
       {:jason, "~> 1.1"},
-      {:benchee, "~> 1.0", only: :dev}
+      {:benchee, "~> 1.0", only: :dev},
+      # {:floki, "~> 0.21.0"}
     ]
   end
 
