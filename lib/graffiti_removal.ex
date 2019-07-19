@@ -1,4 +1,4 @@
-defmodule GraffitiRemovalRequestFetcher do
+defmodule GraffitiRemoval do
   @moduledoc """
   Documentation for GraffitiRemovalRequestFetcher.
   """
@@ -11,18 +11,23 @@ defmodule GraffitiRemovalRequestFetcher do
     benchee
 
     A. executable
-    1. Http client to fetch data
-    2. Streams to process
-    3. CLI to chomp from user
-    4. Recusion, matching (guards for multi-head fns)
-    5. Structs, @specs, exceptions, behaviors
-    6. Tests
-    7. Benchmark
+    1. Http client to fetch data - TBD
+    2. Streams to process - NA
+    3. CLI to chomp from user - DONE
+    4. Recusion, matching (guards for multi-head fns) - WIP
+    5. Structs, @specs, exceptions, behaviors - WIP
+    6. Tests - WIP
+        API response is json
+        API response status code is 200
+    7. Error handling
+    8. Docs @docs
+    9. Benchmark
 
     B app: GenServer with Supervisor link to store past data
 
-
   """
+
+
   def ward_aldermen_data do
     %{1 => "Daniel La Spata", 
       2 => "Brian Hopkins", 
@@ -76,4 +81,5 @@ defmodule GraffitiRemovalRequestFetcher do
       50 => "Debra Silverstein"
     }
   end
+
 end

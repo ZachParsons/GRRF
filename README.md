@@ -1,6 +1,5 @@
 # GraffitiRemovalRequestFetcher
 
-**TODO: Add description**
 
 ## Installation
 
@@ -15,7 +14,20 @@ def deps do
 end
 ```
 
+
+
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/graffiti_removal_request_fetcher](https://hexdocs.pm/graffiti_removal_request_fetcher).
 
+
+
+Usage: 
+    cd into dir
+  mix task
+    run task: `mix grr`
+  executable
+    generate executable file: `mix escript.build`
+    run executable: `./grr`
+
+Follow subsequent directions to submit data request.
