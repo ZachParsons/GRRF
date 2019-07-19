@@ -8,14 +8,14 @@ defmodule GraffitiRemoval.HTTPClient do
   def get_ward_by_alderman(alderman) do
     case fetch(alderman) do
       {:ok, response} -> parse_ward(response)
-      {:error, error} -> error.reason 
+      {:error, error} -> error.reason
     end
   end
 
   @spec get_removal_requests_by_ward_and_date(number, Date) :: list(Request) 
   def get_removal_requests_by_ward_and_date(ward, date) do
     case fetch(ward, date) do
-      {:ok, data} -> parse_ward_and_date(data)
+      {:ok, response} -> parse_ward_and_date(response)
       {:error, error} -> error.reason
     end
   end
@@ -24,19 +24,6 @@ defmodule GraffitiRemoval.HTTPClient do
   # defp fetch(alderman) do
   def fetch(alderman) do
     HTTPoison.get("https://data.cityofchicago.org/resource/7ia9-ayc2.json?alderman=#{alderman}")
-
-    # %HTTPoison.Request{
-    #   method: :get,
-    #   url: "https://data.cityofchicago.org/resource/7ia9-ayc2.json?alderman=#{alderman}", 
-    #   body: "",
-    #   headers: [
-    #     # {"Content-Type", "application/json"} #,
-    #     # {"Authorization", "Basic API_KEY_ID:API_KEY_SECRET"}
-    #   ],
-    #   options: [],
-    #   params: [],
-    # }
-    # |> HTTPoison.request()
     |> IO.inspect(limit: :infinity)
   end
 
@@ -53,25 +40,26 @@ defmodule GraffitiRemoval.HTTPClient do
     decoded
     |> hd
     |> Map.get("ward")
-    |> IO.inspect(label: "HTTPClient 56")
+    |> IO.inspect(label: "HTTPClient parse_ward/1")
   end
 
   @spec parse_ward_and_date(map) :: list(Request)
   defp parse_ward_and_date(response) do
-    response
-    # |> Poison.decode!
-    |> IO.inspect(limit: :infinity)
+    {:ok, decoded} = Jason.decode(response.body) 
+    decoded
     |> Stream.map(&filter_request_fields/1)
+    |> IO.inspect(limit: :infinity)
     |> Enum.to_list
+    |> IO.inspect(limit: :infinity)
   end
 
   @spec filter_request_fields(map) :: Request
-  defp filter_request_fields(data) do
+  defp filter_request_fields(request) do
     %Request{
-      ward: data.ward,
-      creation_date: data.creation_date,
-      location_address: data.location_address,
-      street_address: data.street_address
+      ward: request["ward"],
+      creation_date: request["creation_date"],
+      # location_address: request["location_address"],
+      street_address: request["street_address"]
     }
   end
 
