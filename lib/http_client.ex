@@ -1,11 +1,22 @@
 defmodule GraffitiRemoval.HTTPClient do
-  use HTTPoison.Base
+  # use HTTPoison.Base
   alias GraffitiRemoval.Request
   alias GraffitiRemoval.Report
   alias Jason
 
-  # @spec get_ward_by_alderman(String) :: {:ok, number} | {:error, String}
-  # def get_ward_by_alderman(alderman) do
+  @spec fetch_wards :: {atom, list(map) | String} 
+  def fetch_wards do
+    result = 
+    "https://data.cityofchicago.org/resource/7ia9-ayc2.json"
+    |> HTTPoison.get()
+     
+    case result do
+      {:ok, response} -> parse_wards(response) 
+      _ -> {:error, "Error connecting, try again later."}
+    end
+  end
+
+  @spec get_ward_by_alderman(String, list(map)) :: {atom, map | String}
   def get_ward_by_alderman(alderman, wards) do
     ward = 
       Enum.find(wards, fn(ward)-> 
@@ -29,50 +40,17 @@ defmodule GraffitiRemoval.HTTPClient do
     end
   end
 
-  def fetch_wards do
-    result = 
-    "https://data.cityofchicago.org/resource/7ia9-ayc2.json"
-    |> HTTPoison.get()
-     
-    case result do
-      {:ok, response} -> parse_wards(response)
-      {:error, error} -> error.reason
-    end
-  end
-
-  @spec fetch_ward(String) :: map 
-  # defp fetch(alderman) do
-  def fetch_ward(alderman) do
-    "https://data.cityofchicago.org/resource/7ia9-ayc2.json?alderman=#{alderman}"
-    |> HTTPoison.get()
-  end
-
-  @spec fetch_removal_requests(number, String) :: map
-  # defp fetch(ward, date) do
+  @spec fetch_removal_requests(integer, String) :: list
   def fetch_removal_requests(ward, date) do
     "https://data.cityofchicago.org/resource/hec5-y4x5.json?ward=#{ward}&creation_date=#{date}"
     |> HTTPoison.get()
   end
 
+  @spec parse_wards(list) :: list(map)
   def parse_wards(response) do
-    {:ok, decoded} = Jason.decode(response.body)
+    Jason.decode(response.body)
   end
 
-  @spec parse_ward(map) :: number
-  defp parse_ward(response) do
-    {:ok, decoded} = Jason.decode(response.body)
-
-    ward = 
-      decoded
-      |> hd
-      |> Map.get("ward")
-      |> String.to_integer()
-
-    case ward do
-      x when is_integer(x) -> {:ok, ward}
-      _ -> {:error, "parse_ward/1 error"}
-    end
-  end
 
   @spec parse_ward_and_date(map) :: list(Request)
   defp parse_ward_and_date(response) do
@@ -94,15 +72,13 @@ defmodule GraffitiRemoval.HTTPClient do
     %Request{
       ward: request["ward"],
       creation_date: request["creation_date"],
-      # location_address: request["location_address"],
       street_address: request["street_address"]
     }
   end
 
-  def handle_fetch(alderman, date) do
+  @spec handle_fetch(map, String) :: {atom, Report}
+  def handle_fetch(ward, date) do
     with( 
-      {:ok, wards} <- fetch_wards(),
-      {:ok, ward} <- get_ward_by_alderman(alderman, wards),
       {:ok, requests} <- get_removal_requests_by_ward_and_date(ward, date)
     ) do
 

@@ -1,35 +1,56 @@
 defmodule GraffitiRemoval.UIClient do
   alias GraffitiRemoval.HTTPClient
 
+  # TODO: handle UI errors: empty strings, invalid formats, 
+  # by giving error message & repeating Qs
+  # also "q" to quit
+
   def main(io \\ IO) do
+    wards = 
+      case HTTPClient.fetch_wards do
+        {:ok, wards} -> wards
+        {:error, reason} -> quit(self(), reason)
+      end
+
     greeting()
 
-    alderman = 
+    ward = 
       prompt_for_alderman()
       |> receive_input(io)
+      |> get_ward_by_alderman(wards)
     
     date = 
       prompt_for_date()
       |> receive_input(io)
     
-    case HTTPClient.handle_fetch(alderman, date) do
+    case HTTPClient.handle_fetch(ward, date) do
       {:ok, report} -> print_report(report)
-      {:error, reason} -> print_error(reason)
+      {:error, reason} -> quit(self(), reason)
     end
   end
 
-  # TODO: handle UI errors: empty strings, invalid formats, 
-  # by giving error message & repeating Qs
-  # also "q" to quit
+  defp get_ward_by_alderman(alderman, wards) do
+    ward = 
+      Enum.find(wards, fn(ward)-> 
+        String.contains?(ward["alderman"],  alderman)
+      end)
+
+    case ward do
+      w when is_map(w) -> ward
+      _ -> "Alderman not found"
+    end
+  end
 
   def receive_input(message, io) do
-    # io.gets(message <> "\n")
     io.gets(message)
     |> String.trim
   end
 
-  defp greeting, do: IO.puts "Welcome to The Graffiti Removal Requests Reporter. (Enter 'q' to quit.)
-  "
+  defp quit(pid, reason) do
+    Process.exit(pid, reason)
+  end
+
+  defp greeting, do: IO.puts "Welcome to The Graffiti Removal Requests Reporter."
   
   defp prompt_for_alderman do
     "Please enter the last name of the Alderman of the ward on which to report in this format: Dowell\n"
