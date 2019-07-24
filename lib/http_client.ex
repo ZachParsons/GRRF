@@ -4,53 +4,89 @@ defmodule GraffitiRemoval.HTTPClient do
   alias GraffitiRemoval.Report
   alias Jason
 
-  @spec get_ward_by_alderman(String) :: number
-  def get_ward_by_alderman(alderman) do
-    case fetch(alderman) do
-      {:ok, response} -> parse_ward(response)
-      {:error, error} -> error.reason
+  # @spec get_ward_by_alderman(String) :: {:ok, number} | {:error, String}
+  # def get_ward_by_alderman(alderman) do
+  def get_ward_by_alderman(alderman, wards) do
+    ward = 
+      Enum.find(wards, fn(ward)-> 
+        String.contains?(ward["alderman"],  alderman)
+      end)
+
+    case ward do
+      x when is_map(x) -> {:ok, ward}
+      _ -> {:error, "get_ward_by_alderman/2 error"}
     end
   end
 
-  @spec get_removal_requests_by_ward_and_date(number, Date) :: list(Request) 
+  @spec get_removal_requests_by_ward_and_date(map, String) :: list(Request) 
   def get_removal_requests_by_ward_and_date(ward, date) do
-    case fetch(ward, date) do
+    ward_value = ward["ward"]
+
+    result = fetch_removal_requests(ward_value, date)
+    case result do
       {:ok, response} -> parse_ward_and_date(response)
       {:error, error} -> error.reason
     end
   end
 
-  @spec fetch(String) :: map 
-  # defp fetch(alderman) do
-  def fetch(alderman) do
-    HTTPoison.get("https://data.cityofchicago.org/resource/7ia9-ayc2.json?alderman=#{alderman}")
-    |> IO.inspect(limit: :infinity)
+  def fetch_wards do
+    result = 
+    "https://data.cityofchicago.org/resource/7ia9-ayc2.json"
+    |> HTTPoison.get()
+     
+    case result do
+      {:ok, response} -> parse_wards(response)
+      {:error, error} -> error.reason
+    end
   end
 
-  @spec fetch(number, string) :: map
+  @spec fetch_ward(String) :: map 
+  # defp fetch(alderman) do
+  def fetch_ward(alderman) do
+    "https://data.cityofchicago.org/resource/7ia9-ayc2.json?alderman=#{alderman}"
+    |> HTTPoison.get()
+  end
+
+  @spec fetch_removal_requests(number, String) :: map
   # defp fetch(ward, date) do
-  def fetch(ward, date) do
-    HTTPoison.get("https://data.cityofchicago.org/resource/hec5-y4x5.json?ward=#{ward}&creation_date=#{date}")
-    |> IO.inspect(limit: :infinity)    
+  def fetch_removal_requests(ward, date) do
+    "https://data.cityofchicago.org/resource/hec5-y4x5.json?ward=#{ward}&creation_date=#{date}"
+    |> HTTPoison.get()
+  end
+
+  def parse_wards(response) do
+    {:ok, decoded} = Jason.decode(response.body)
   end
 
   @spec parse_ward(map) :: number
   defp parse_ward(response) do
-    {:ok, decoded} = Jason.decode(response.body) 
-    decoded
-    |> hd
-    |> Map.get("ward")
-    |> IO.inspect(label: "HTTPClient parse_ward/1")
+    {:ok, decoded} = Jason.decode(response.body)
+
+    ward = 
+      decoded
+      |> hd
+      |> Map.get("ward")
+      |> String.to_integer()
+
+    case ward do
+      x when is_integer(x) -> {:ok, ward}
+      _ -> {:error, "parse_ward/1 error"}
+    end
   end
 
   @spec parse_ward_and_date(map) :: list(Request)
   defp parse_ward_and_date(response) do
     {:ok, decoded} = Jason.decode(response.body) 
-    decoded
-    |> Stream.map(&filter_request_fields/1)
-    |> IO.inspect(limit: :infinity)
-    |> Enum.to_list
-    |> IO.inspect(limit: :infinity)
+    
+    requests = 
+      decoded
+      |> Stream.map(&filter_request_fields/1)
+      |> Enum.to_list
+
+    case requests do
+      x when is_list(x) -> {:ok, requests}
+      _ -> {:error, "parse_ward_and_date/1 error"}
+    end
   end
 
   @spec filter_request_fields(map) :: Request
@@ -63,32 +99,41 @@ defmodule GraffitiRemoval.HTTPClient do
     }
   end
 
-
-  defp retry(fetch_fn, count) when count > 0 do
-    IO.inspect(label: "line 87, retry count: #{count}")
-    case fetch_fn.() do
-      {:ok, report} -> report 
-      {:error, reason} -> retry(fetch_fn, count-1)
-    end
-  end
-  defp retry(fetch_fn, count) when count == 0, do: :error
-
-
   def handle_fetch(alderman, date) do
     with( 
-      {:ok, ward} <- get_ward_by_alderman(alderman),
+      {:ok, wards} <- fetch_wards(),
+      {:ok, ward} <- get_ward_by_alderman(alderman, wards),
       {:ok, requests} <- get_removal_requests_by_ward_and_date(ward, date)
     ) do
 
       {:ok, 
         %Report{
-          alderman: alderman,
-          ward: ward,
+          alderman: ward["alderman"],
+          ward: ward["ward"],
           date: date,
           requests_count: Enum.count(requests),
         }
       }
     end
   end
+
+
+#  @spec try_query(function, integer) :: {atom, any}
+#   def try_query(query, tries \\ 9)
+
+#   def try_query(query, tries) when tries > 0 do
+#     case query.() do
+#       {:error, msg} ->
+#         Process.sleep(Enum.random(20..100)) #
+#         try_query(query, tries - 1)
+#       {:ok, result} ->
+#         {:ok, result}
+#     end
+#   end
+
+#   def try_query(_query, tries) when tries <= 0 do
+#     {:error, "Exceeded number of retries for query."} #
+#   end
+
 
 end

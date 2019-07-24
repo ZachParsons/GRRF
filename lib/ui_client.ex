@@ -12,9 +12,6 @@ defmodule GraffitiRemoval.UIClient do
       prompt_for_date()
       |> receive_input(io)
     
-    # fetch_data(alderman, date)
-    IO.puts(alderman <> " " <> date)
-
     case HTTPClient.handle_fetch(alderman, date) do
       {:ok, report} -> print_report(report)
       {:error, reason} -> print_error(reason)
@@ -35,22 +32,21 @@ defmodule GraffitiRemoval.UIClient do
   "
   
   defp prompt_for_alderman do
-    IO.puts "Please enter the last name of the Alderman of the ward on which to report"
+    "Please enter the last name of the Alderman of the ward on which to report in this format: Dowell\n"
   end
   
   defp prompt_for_date do
-    IO.puts "Please enter year and month on which to report in this format: 2019-07"
+    "Please enter year and month on which to report in this format: 2018-06\n"
   end
 
   defp print_report(report) do
-    """
+    IO.puts "
       Graffiti Removal Requests Report
       ________________________________ 
       Alderman: #{report.alderman}
       Ward: #{report.ward}
-      Year and Month: #{report.date}
-      Total Requests Count: #{report.count}
-    """
+      Year & Month: #{report.date}
+      Total Requests Count: #{report.requests_count}\n"
   end
 
   def print_error(reason) do
