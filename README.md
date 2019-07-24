@@ -6,5 +6,6 @@
 
 ### Usage
   1. Use your terminal to cd into this directory.
-  2. Run task: `mix report`.
-  3. Follow subsequent directions to submit data request.
+  2. Get dependencies: `mix deps.get`.
+  3. Run task: `mix report`.
+  4. Follow subsequent directions to submit data request.
