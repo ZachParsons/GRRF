@@ -1,33 +1,10 @@
 # GraffitiRemovalRequestFetcher
 
 
-## Installation
+### Installation
+  1. Clone repo locally.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `graffiti_removal_request_fetcher` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:graffiti_removal_request_fetcher, "~> 0.1.0"}
-  ]
-end
-```
-
-
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/graffiti_removal_request_fetcher](https://hexdocs.pm/graffiti_removal_request_fetcher).
-
-
-
-Usage: 
-    cd into dir
-  mix task
-    run task: `mix grr`
-  executable
-    generate executable file: `mix escript.build`
-    run executable: `./grr`
-
-Follow subsequent directions to submit data request.
+### Usage
+  1. Use your terminal to cd into this directory.
+  2. Run task: `mix report`.
+  3. Follow subsequent directions to submit data request.
