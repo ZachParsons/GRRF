@@ -6,12 +6,13 @@ defmodule GraffitiRemoval.HTTPClient do
 
   @spec fetch_wards :: {atom, list(map) | String} 
   def fetch_wards do
-    result = 
-    "https://data.cityofchicago.org/resource/7ia9-ayc2.json"
-    |> HTTPoison.get()
-     
-    case result do
-      {:ok, response} -> parse_wards(response) 
+    wards = fn() ->
+      "https://data.cityofchicago.org/resource/7ia9-ayc2.json"
+      |> HTTPoison.get()
+    end
+    
+    case try_fetch(wards, 3) do
+      {:ok, response} -> parse_wards(response)
       _ -> {:error, "Error connecting, try again later."}
     end
   end
@@ -42,23 +43,33 @@ defmodule GraffitiRemoval.HTTPClient do
 
   @spec fetch_removal_requests(integer, String) :: list
   def fetch_removal_requests(ward, date) do
-    "https://data.cityofchicago.org/resource/hec5-y4x5.json?ward=#{ward}&creation_date=#{date}"
-    |> HTTPoison.get()
+    removal_requests = fn() -> 
+      "https://data.cityofchicago.org/resource/hec5-y4x5.json?ward=#{ward}&creation_date=#{date}"
+      |> HTTPoison.get()
+    end
+  
+    try_fetch(removal_requests, 3)
   end
 
   @spec parse_wards(list) :: list(map)
+  # @spec parse_wards(list) :: {atom, String | struct}
   def parse_wards(response) do
-    Jason.decode(response.body)
+    Jason.decode(response.body) 
+    # |> case do
+    #   {:ok, result} -> {:ok, result} 
+    #   {:error, reason} -> {:error, reason}
+    # end
   end
 
 
   @spec parse_ward_and_date(map) :: list(Request)
-  defp parse_ward_and_date(response) do
+  def parse_ward_and_date(response) do
     {:ok, decoded} = Jason.decode(response.body) 
     
     requests = 
       decoded
-      |> Stream.map(&filter_request_fields/1)
+      # |> Stream.map(&filter_request_fields/1)
+      |> Stream.map(&make_request/1)
       |> Enum.to_list
 
     case requests do
@@ -67,8 +78,10 @@ defmodule GraffitiRemoval.HTTPClient do
     end
   end
 
-  @spec filter_request_fields(map) :: Request
-  defp filter_request_fields(request) do
+  # @spec filter_request_fields(map) :: Request
+  @spec make_request(map) :: Request
+  # defp filter_request_fields(request) do
+  def make_request(request) do
     %Request{
       ward: request["ward"],
       creation_date: request["creation_date"],
@@ -93,23 +106,22 @@ defmodule GraffitiRemoval.HTTPClient do
     end
   end
 
+ @spec try_fetch(function, integer) :: {atom, any}
+  def try_fetch(fetch, tries \\ 9)
 
-#  @spec try_query(function, integer) :: {atom, any}
-#   def try_query(query, tries \\ 9)
+  def try_fetch(fetch, tries) when tries > 0 do
+    case fetch.() do
+      {:error, _reason} ->
+        Process.sleep(Enum.random(20..100)) #
+        try_fetch(fetch, tries - 1)
+      {:ok, result} ->
+        {:ok, result}
+      _ -> {:error, "Error connecting, try again later."}
+    end
+  end
 
-#   def try_query(query, tries) when tries > 0 do
-#     case query.() do
-#       {:error, msg} ->
-#         Process.sleep(Enum.random(20..100)) #
-#         try_query(query, tries - 1)
-#       {:ok, result} ->
-#         {:ok, result}
-#     end
-#   end
-
-#   def try_query(_query, tries) when tries <= 0 do
-#     {:error, "Exceeded number of retries for query."} #
-#   end
-
+  def try_fetch(_fetch, tries) when tries <= 0 do
+    {:error, "Exceeded number of retries for fetch."} #
+  end
 
 end

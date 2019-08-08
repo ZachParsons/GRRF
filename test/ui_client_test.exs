@@ -11,11 +11,11 @@ defmodule GraffitiRemoval.UIClientTest do
   alias GraffitiRemoval.UIClient
 
 
-  test "main/1" do
-    assert capture_io(fn ->
-      UIClient.main(FakeIO)
-    end) == "Welcome to The Graffiti Removal Requests Reporter."
-  end
+  # test "main/1" do
+  #   assert capture_io(fn ->
+  #     UIClient.main(FakeIO)
+  #   end) == "Welcome to The Graffiti Removal Requests Reporter."
+  # end
 
     # test "receive_input/0 with input" do
     #   assert UIClient.receive_input("Which alderman?", FakeIO) == "Doe"
